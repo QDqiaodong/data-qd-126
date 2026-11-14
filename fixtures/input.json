@@ -1,0 +1,76 @@
+{
+  "control": "C",
+  "treatment": "T",
+  "expected_treatment_share": {
+    "numerator": 1,
+    "denominator": 2
+  },
+  "assignments": [
+    {
+      "user": "0",
+      "variant": "C"
+    },
+    {
+      "user": "1",
+      "variant": "C"
+    },
+    {
+      "user": "2",
+      "variant": "C"
+    },
+    {
+      "user": "3",
+      "variant": "C"
+    },
+    {
+      "user": "4",
+      "variant": "T"
+    },
+    {
+      "user": "5",
+      "variant": "T"
+    },
+    {
+      "user": "6",
+      "variant": "T"
+    },
+    {
+      "user": "7",
+      "variant": "T"
+    }
+  ],
+  "outcomes": [
+    {
+      "user": "0",
+      "converted": 1
+    },
+    {
+      "user": "1",
+      "converted": 0
+    },
+    {
+      "user": "2",
+      "converted": 0
+    },
+    {
+      "user": "3",
+      "converted": 0
+    },
+    {
+      "user": "4",
+      "converted": 1
+    },
+    {
+      "user": "5",
+      "converted": 1
+    },
+    {
+      "user": "6",
+      "converted": 0
+    },
+    {
+      "user": "7",
+      "converted": 0
+    }
+  ]
+}
