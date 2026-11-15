@@ -24,8 +24,23 @@ python3 -m venv .venv
 输入和输出不得相同，输出符号链接拒绝。单操作者批处理，不承诺并发发布或断电恢复。
 同输入重跑不累加。测试使用临时目录，运行产物在忽略的run/。
 
+## 大型快照
+
+加 `--large-snapshot` 审计最多 1 GiB、每表 1,000,000 行的快照：
+
+```sh
+.venv/bin/experiment-lift --source big.json --output run/large.json --large-snapshot
+```
+
+字段顺序任意、结果表可先于分组表；输入校验、统计语义和报告与默认模式逐字段一致。
+解析按块增量进行，行数据写入输出目录旁的 SQLite 临时库做外存对账，内存不随用户数
+增长；临时库在成功或失败后自动删除，因此输出目录需有与快照相当的可用磁盘。
+失败仍退出2并保留旧报告。默认模式（8 MB / 每表 20000 行）行为不变；
+百万行测试在 Linux 子进程 128 MiB 地址空间限制下运行。
+
 src/experiment_lift/model.py 为业务模型，相关算法模块独立组织；common.py 提供受限JSON及报告发布，
-cli.py 衔接数据链路。fixtures 为明确自制样例，代码与样例采用MIT许可。
+large.py 提供大快照的流式解析与外存对账，cli.py 衔接数据链路。fixtures 为明确自制样例，
+代码与样例采用MIT许可。
 
 ## 业务与样例结果
 

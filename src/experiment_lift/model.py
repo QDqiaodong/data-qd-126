@@ -2,6 +2,15 @@ from fractions import Fraction
 from .common import require,ident,number,rows
 from .statistics import wilson,compare
 
+def summarize(control,treatment,expected,counts):
+    if any(n==0 for n,x in counts.values()):raise ValueError('both arms require observed assignments')
+    total=counts[control][0]+counts[treatment][0];expected_counts={control:total*(1-expected),treatment:total*expected}
+    statistic=sum(((Fraction(counts[v][0])-e)**2/e for v,e in expected_counts.items()),Fraction())
+    return {'arms':{v:{'assigned':n,'converted':x,'rate':str(Fraction(x,n)),'rate_interval_95':wilson(x,n)} for v,(n,x) in sorted(counts.items())},
+            'comparison':compare(counts[control],counts[treatment]),
+            'allocation_diagnostic':{'pearson_chi_square':str(statistic),'expected_counts':{v:str(e) for v,e in expected_counts.items()},
+                                     'p_value':None,'interpretation':'Count diagnostic only; no automatic pass/fail or experiment stopping decision.'}}
+
 def analyze(data):
     require(data,'control treatment expected_treatment_share assignments outcomes');control=ident(data['control']);treatment=ident(data['treatment'])
     if control==treatment:raise ValueError('control and treatment must differ')
@@ -18,10 +27,4 @@ def analyze(data):
         if user in outcomes or user not in assigned:raise ValueError('duplicate or unassigned outcome')
         outcomes[user]=converted;counts[assigned[user]][1]+=converted
     if set(assigned)!=set(outcomes):raise ValueError('every assigned unit needs an explicit observed 0/1 outcome')
-    if any(n==0 for n,x in counts.values()):raise ValueError('both arms require observed assignments')
-    total=len(assigned);expected_counts={control:total*(1-expected),treatment:total*expected}
-    statistic=sum(((Fraction(counts[v][0])-e)**2/e for v,e in expected_counts.items()),Fraction())
-    return {'arms':{v:{'assigned':n,'converted':x,'rate':str(Fraction(x,n)),'rate_interval_95':wilson(x,n)} for v,(n,x) in sorted(counts.items())},
-            'comparison':compare(counts[control],counts[treatment]),
-            'allocation_diagnostic':{'pearson_chi_square':str(statistic),'expected_counts':{v:str(e) for v,e in expected_counts.items()},
-                                     'p_value':None,'interpretation':'Count diagnostic only; no automatic pass/fail or experiment stopping decision.'}}
+    return summarize(control,treatment,expected,counts)
