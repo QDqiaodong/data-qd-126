@@ -39,8 +39,28 @@ python3 -m venv .venv
 百万行测试在 Linux 子进程 128 MiB 地址空间限制下运行。
 
 src/experiment_lift/model.py 为业务模型，相关算法模块独立组织；common.py 提供受限JSON及报告发布，
-large.py 提供大快照的流式解析与外存对账，cli.py 衔接数据链路。fixtures 为明确自制样例，
+large.py 提供大快照的流式解析与外存对账，ledger.py 提供 SQLite 分组账本，cli.py 衔接数据链路。fixtures 为明确自制样例，
 代码与样例采用MIT许可。
+
+## 分组账本
+
+同一 CLI 增加基于 SQLite 的分组账本，原有 `--source/--output` 入口不变：
+
+```sh
+.venv/bin/experiment-lift init --ledger run/ledger.db --control C --treatment T \
+  --numerator 1 --denominator 3 --seed trial-2026
+.venv/bin/experiment-lift assign --ledger run/ledger.db --source batch.json --output run/assignments.json
+.venv/bin/experiment-lift export --ledger run/ledger.db --output run/assignments.json
+```
+
+`init` 固定 control/treatment、整数比例 p（0<p<1）和 seed，标识校验沿用既有规则，
+账本已存在时拒绝。`assign` 读 `{"batch_id": ..., "users": [...]}`（至多 20000 个
+用户），提交即导出：批内唯一、跨批重复拒绝；同批号同用户集合重试幂等，换集合拒绝；
+任何冲突整批回滚。每次提交后处理组人数恰为 `floor(累计人数*p)`，旧分组不变；新名额
+按 seed 与 user 的无歧义编码 SHA256 排序分配（同值按 user）。写事务内计算配额与校验
+身份，锁冲突可退出 2。`export` 按 user 排序流式输出，字段可直接追加 `outcomes` 供
+原分析入口使用；提交后导出失败可仅从账本恢复，不重新分组或累加；百万用户导出在
+Linux 子进程 128 MiB 地址空间限制下通过。细节见[数据契约](docs/contract.md)。
 
 ## 业务与样例结果
 
